@@ -8,6 +8,9 @@ Class {
 SCFRProfilingRunner class >> runBenchmarkNamed: benchname [
 	
 	| substrings selector runner |
+	
+	Stdio stdout nextPutAll: 'Profiling benchmark: ', benchname; crlf.
+	
 	substrings := benchname substrings: '>>#'.
 	selector := substrings second asSymbol.
 	
