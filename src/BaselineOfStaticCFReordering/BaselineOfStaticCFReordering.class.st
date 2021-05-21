@@ -12,5 +12,7 @@ BaselineOfStaticCFReordering >> baseline: spec [
 		spec 
 			baseline: 'Benchmarks' 
 			with: [ 
-				spec repository: 'github://pharo-project/pharo-benchmarks/src' ] ]
+				spec repository: 'github://pharo-project/pharo-benchmarks/src' ].
+		spec package: #'StaticCFReordering' with: [
+				spec requires: #('Benchmarks') ] ]
 ]
