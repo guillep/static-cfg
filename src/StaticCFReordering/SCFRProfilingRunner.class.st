@@ -15,7 +15,7 @@ SCFRProfilingRunner class >> runBenchmarkNamed: benchname [
 		execute: (substrings first asClass new runOnly: selector)
 		problemSize: 1.
 		
-	^ (runner results at: selector) first
+	^ (runner results at: (SMarkSuite new benchmarkNameForSelector: selector)) first
 ]
 
 { #category : #'as yet unclassified' }
@@ -57,5 +57,7 @@ SCFRProfilingRunner >> timedBenchmarkExecution: aSelector [
 	self primitiveStartProfiling.
 	result := suite perform: aSelector ] ensure: [ 
 		profilerResult := self primitiveStopProfiling ].
-	(results at: aSelector ifAbsentPut: [OrderedCollection new]) add: result.
+	(results
+		at: (suite benchmarkNameForSelector: aSelector)
+		ifAbsentPut: [OrderedCollection new]) add: result.
 ]
