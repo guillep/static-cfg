@@ -57,6 +57,14 @@ SCFRProfilingRunner >> timedBenchmarkExecution: aSelector [
 	self primitiveStartProfiling.
 	result := suite perform: aSelector ] ensure: [ 
 		profilerResult := self primitiveStopProfiling ].
+	
+	result := (OrderedCollection streamContents: [ :str |
+    [ result first notNil ] whileTrue: [
+        str nextPut: result first name.
+        result := result second.
+    ]
+]) asSet asArray.
+	
 	(results
 		at: (suite benchmarkNameForSelector: aSelector)
 		ifAbsentPut: [OrderedCollection new]) add: result.
