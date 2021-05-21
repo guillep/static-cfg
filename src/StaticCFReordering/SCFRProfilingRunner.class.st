@@ -11,9 +11,9 @@ SCFRProfilingRunner class >> runBenchmarkNamed: benchname [
 	substrings := benchname substrings: '>>#'.
 	selector := substrings second asSymbol.
 	
-	runner := self
+	[runner := self
 		execute: (substrings first asClass new runOnly: selector)
-		problemSize: 1.
+		problemSize: 1] forkAt: 70.
 		
 	^ (runner results at: (SMarkSuite new benchmarkNameForSelector: selector)) first
 ]
