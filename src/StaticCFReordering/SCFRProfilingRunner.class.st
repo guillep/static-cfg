@@ -37,7 +37,9 @@ SCFRProfilingRunner class >> runOnFile: aFileName [
 			results at: benchname put: (self runBenchmarkNamed: benchname).
 		] ].
 
-	STONJSON put: results onStream: 'characterisation.json'
+	'characterisation.json' asFileReference writeStreamDo: [ :str |
+		STONJSON put: results onStream: str
+	]
 ]
 
 { #category : #running }
