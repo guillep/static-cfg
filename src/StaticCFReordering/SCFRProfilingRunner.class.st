@@ -7,17 +7,19 @@ Class {
 { #category : #'as yet unclassified' }
 SCFRProfilingRunner class >> runBenchmarkNamed: benchname [
 	
-	| substrings selector runner |
+	| substrings selector runner wait |
 	
 	Stdio stdout nextPutAll: 'Profiling benchmark: ', benchname; crlf.
 	
 	substrings := benchname substrings: '>>#'.
 	selector := substrings second asSymbol.
-	
+
+	wait := Semaphore new.
 	[runner := self
 		execute: (substrings first asClass new runOnly: selector)
-		problemSize: 1] forkAt: 70.
-		
+		problemSize: 1.
+		wait signal.] forkAt: 70.
+	wait wait.
 	^ (runner results at: (SMarkSuite new benchmarkNameForSelector: selector)) first
 ]
 
