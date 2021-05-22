@@ -57,20 +57,27 @@ SCFRProfilingRunner >> primitiveStopProfiling [
 { #category : #running }
 SCFRProfilingRunner >> timedBenchmarkExecution: aSelector [
 
-	| result profilerResult |
+	| result profilerResult massagedResult |
 	[ 
 	self primitiveStartProfiling.
 	result := suite perform: aSelector ] ensure: [ 
 		profilerResult := self primitiveStopProfiling ].
 	
+	massagedResult := Dictionary new.
+	massagedResult at: 'implicitJumpsFound' put: profilerResult first.
+	massagedResult at: 'implicitJumpsTaken' put: profilerResult second.
+	
+	
+	profilerResult := profilerResult third.
 	profilerResult := (OrderedCollection streamContents: [ :str |
     [ profilerResult first notNil ] whileTrue: [
         str nextPut: profilerResult first name.
         profilerResult := profilerResult second.
     ]
-]) asSet asArray.
+]) asBag asDictionary.
 	
+	massagedResult at: 'methodsExecuted' put: profilerResult.
 	(results
 		at: (suite benchmarkNameForSelector: aSelector)
-		ifAbsentPut: [OrderedCollection new]) add: profilerResult.
+		ifAbsentPut: [OrderedCollection new]) add: massagedResult.
 ]
