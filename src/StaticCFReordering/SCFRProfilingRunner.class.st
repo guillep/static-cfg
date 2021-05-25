@@ -68,7 +68,7 @@ SCFRProfilingRunner >> timedBenchmarkExecution: aSelector [
 	massagedResult := Dictionary new.
 	massagedResult at: 'implicitJumpsFound' put: profilerResult first.
 	massagedResult at: 'implicitJumpsTaken' put: profilerResult second.
-	
+	massagedResult at: 'totalBytecodeCount' put: profilerResult fourth.
 	
 	profilerResult := profilerResult third.
 	profilerResult := (OrderedCollection streamContents: [ :str |
