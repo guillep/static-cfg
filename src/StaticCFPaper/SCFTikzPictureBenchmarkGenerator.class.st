@@ -209,19 +209,20 @@ SCFTikzPictureBenchmarkGenerator >> outputDirectory [
 ]
 
 { #category : #generate }
-SCFTikzPictureBenchmarkGenerator >> outputResultsFor: aCollection inStream: aWriteStream [ 
+SCFTikzPictureBenchmarkGenerator >> outputResultsFor: aCollection inStream: aWriteStream [
 
 	aWriteStream
 		nextPutAll: '\addplot
 table[row sep=\\,y index=0] {
 data\\';
 		cr.
-	(aCollection at: 'measurements') do: [ :e |
+	((aCollection at: 'measurements') allButFirst: 2)
+		"remov the warmup" do: [ :e | 
 		aWriteStream nextPutAll: e asString.
 		aWriteStream nextPutAll: '\\'.
-		aWriteStream cr. ].
+		aWriteStream cr ].
 	aWriteStream nextPutAll: '};'.
-	aWriteStream cr.
+	aWriteStream cr
 ]
 
 { #category : #wisker }
