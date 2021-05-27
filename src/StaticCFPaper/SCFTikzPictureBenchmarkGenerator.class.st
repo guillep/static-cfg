@@ -238,8 +238,8 @@ SCFTikzPictureBenchmarkGenerator >> preambleWisk: name [
 
 	^ '\begin{tikzpicture}
 \begin{axis}[
+   title=',name,',
   boxplot/draw direction=y,
-  xlabel={', name, '},
   height=4cm,
   boxplot={
       %
@@ -260,15 +260,13 @@ SCFTikzPictureBenchmarkGenerator >> preambleWisk: name [
   x=3cm,
   % ... and it means that we should describe intervals:
   %xtick={0,1,2,...,50},
-  x tick label as interval,
-  xticklabels={%
-      {Data set 1\\{\tiny off/on}},%
-  },
-  x tick label style={
-      text width=2.5cm,
-      align=center
-  },
-  cycle list={{red},{blue},{green}},
+   xticklabels={%
+        \footnotesize{b},
+        $pe$, \tiny{b},
+        \tiny{ph},
+        \tiny{sl}
+        },
+   cycle list={{red},{blue},{green}},
 ]
 '
 ]
