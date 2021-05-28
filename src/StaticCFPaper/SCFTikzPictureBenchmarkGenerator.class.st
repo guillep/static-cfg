@@ -30,7 +30,7 @@ SCFTikzPictureBenchmarkGenerator >> figureGameSuite [
 			   'benchThreadRing.tex' 'benchReverseComplement.tex'
 			   'benchRegexDNA.tex' )
 		named: 'GameSuite'
-		caption: 'Game Suite Benchmarks (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:game'
+		caption: 'Game Suite Benchmarks in milliseconds (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:game'
 ]
 
 { #category : #generate }
@@ -45,23 +45,11 @@ SCFTikzPictureBenchmarkGenerator >> figureGenericMicro [
 			   'benchInstVarAccess.tex' 'benchClassVarBinding.tex'
 			   'benchArrayAccess.tex' 'benchSend.tex' )
 		named: 'GenericMicrobench'
-		caption: 'Generic Micro Benchmarks (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:generic'
+		caption: 'Generic Micro Benchmarks in milliseconds (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:generic'
 ]
 
 { #category : #generate }
-SCFTikzPictureBenchmarkGenerator >> figurePrograms [
-
-	"self new figurePrograms"
-
-	self
-		generateLargeFigure:
-		#( 'benchCompiler.tex' 'benchDeltaBlue.tex' 'benchRichards.tex' )
-		named: 'Programs'
-		caption: 'Program Benchmarks (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:program'
-]
-
-{ #category : #generate }
-SCFTikzPictureBenchmarkGenerator >> figuresMicroBenchmarks [
+SCFTikzPictureBenchmarkGenerator >> figureMicroBenchmarks [
 
 	"self new figuresMicroBenchmarks"
 
@@ -75,7 +63,29 @@ SCFTikzPictureBenchmarkGenerator >> figuresMicroBenchmarks [
 			   'benchSequenceOfTrueConditionalBranches.tex'
 			   'benchSmallFactorial.tex' )
 		named: 'ControlFlowMicrobench'
-		caption: 'Micro Benchmars (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:micro'
+		caption: 'Micro Benchmars in milliseconds (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:micro'
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figurePrograms [
+
+	"self new figurePrograms"
+
+	self
+		generateLargeFigure:
+		#( 'benchCompiler.tex' 'benchDeltaBlue.tex' 'benchRichards.tex' )
+		named: 'Programs'
+		caption: 'Program Benchmarks in milliseconds (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:program'
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> fourFigure [
+	"self new fourFigure"
+	
+	self figureGameSuite.
+	self figureGenericMicro.
+	self figurePrograms.
+	self figureMicroBenchmarks.
 ]
 
 { #category : #wisker }
@@ -135,28 +145,6 @@ SCFTikzPictureBenchmarkGenerator >> generateLargeFigure: files named: aString [
 ]
 
 { #category : #generate }
-SCFTikzPictureBenchmarkGenerator >> generateLargeFigure: files named: aString caption: captionString [
-
-	(self outputDirectory / aString , 'tex') ensureDelete.
-	self outputDirectory / aString , 'tex' writeStreamDo: [ :str | 
-		str nextPutAll: '\begin{figure}[!h]'.
-
-		files withIndexDo: [ :f :i | 
-			str nextPutAll: '\begin{minipage}{.20\textwidth}'.
-			str cr.
-			str nextPutAll:
-				'\input{' , self outputDirectory basename asString , '/'
-				, f asFileReference basename , '}'.
-			str cr.
-			str nextPutAll: '\end{minipage}'.
-			str cr
-			"i \\ 4 = 0 ifTrue: [ str nextPutAll: '\\' , String cr ] " ].
-
-		str nextPutAll: '\caption{TikZ from GeoGebra}
-\end{figure}' ]
-]
-
-{ #category : #generate }
 SCFTikzPictureBenchmarkGenerator >> generateLargeFigure: files named: aString caption: captionString anchor: ancre [
 
 	(self outputDirectory / aString , 'tex') ensureDelete.
@@ -174,7 +162,7 @@ SCFTikzPictureBenchmarkGenerator >> generateLargeFigure: files named: aString ca
 			str cr
 			"i \\ 4 = 0 ifTrue: [ str nextPutAll: '\\' , String cr ] " ].
 
-		str nextPutAll: '\caption{', captionString, '\label{', ancre,'}}
+		str nextPutAll: '\caption{', captionString, ' Lower is better.\label{', ancre,'}}
 \end{figure}' ]
 ]
 
