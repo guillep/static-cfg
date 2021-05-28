@@ -19,6 +19,20 @@ SCFTikzPictureBenchmarkGenerator >> figureFour [
 ]
 
 { #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figureGameBenchmarkRuntimeCharacterisation [
+
+	"self new figureGameBenchmarkRuntimeCharacterisation"
+
+	self
+		generateCharacterizationFigureFor:
+			#( 'benchMandelbrot' 'benchPiDigits' 'benchFannkuchRedux'
+			   'benchSpectralNorm' 'benchMeteor' 'benchChameleons'
+			   'benchThreadRing' 'benchReverseComplement'
+			   'benchRegexDNA' )
+		named: 'gamebench-characterisation.tex'
+]
+
+{ #category : #generate }
 SCFTikzPictureBenchmarkGenerator >> figureGameSuite [
 
 	"self new figureGameSuite"
@@ -49,6 +63,37 @@ SCFTikzPictureBenchmarkGenerator >> figureGenericMicro [
 ]
 
 { #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figureGenericMicroBenchmarkRuntimeCharacterisation [
+
+	"self new figureGenericMicroBenchmarkRuntimeCharacterisation"
+
+	self
+		generateCharacterizationFigureFor:
+			#( 'benchSendWithManyArguments'
+			   'benchIntLoop' 'benchFloatLoop' 'benchStone'
+			   'benchInstVarAccess' 'benchClassVarBinding'
+			   'benchArrayAccess' 'benchSend'  )
+		named: 'genericmicro-characterisation.tex'
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figureMicroBenchmarkRuntimeCharacterisation [
+
+	"self new figureMicroBenchmarkRuntimeCharacterisation"
+
+	self
+		generateCharacterizationFigureFor:
+			#( 'benchSequenceOfFalseConditionalBranches'
+			   'benchSequenceOfFalseConditionalWithCompensation'
+			   'benchVeryLargeFactorial' 'benchLargeFactorial'
+			   'benchSequenceOfTrueConditionalWithCompensation'
+			   'benchSequenceOfFalseFallthroughs'
+			   'benchSequenceOfTrueConditionalBranches'
+			   'benchSmallFactorial' )
+		named: 'microbench-characterisation.tex'
+]
+
+{ #category : #generate }
 SCFTikzPictureBenchmarkGenerator >> figureMicroBenchmarks [
 
 	"self new figuresMicroBenchmarks"
@@ -67,6 +112,17 @@ SCFTikzPictureBenchmarkGenerator >> figureMicroBenchmarks [
 ]
 
 { #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figureProgramBenchmarkRuntimeCharacterisation [
+
+	"self new figureProgramBenchmarkRuntimeCharacterisation"
+
+	self
+		generateCharacterizationFigureFor:
+			#( 'benchCompiler' 'benchDeltaBlue' 'benchRichards' )
+		named: 'program-characterisation.tex'
+]
+
+{ #category : #generate }
 SCFTikzPictureBenchmarkGenerator >> figurePrograms [
 
 	"self new figurePrograms"
@@ -76,6 +132,16 @@ SCFTikzPictureBenchmarkGenerator >> figurePrograms [
 		#( 'benchCompiler.tex' 'benchDeltaBlue.tex' 'benchRichards.tex' )
 		named: 'Programs'
 		caption: 'Program Benchmarks in milliseconds (b=Baseline, p=\ph, sl=\pe).' anchor: 'table:program'
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> figureRuntimeCharacterisation [
+
+	"self new figureRuntimeCharacterisation"
+	self figureMicroBenchmarkRuntimeCharacterisation.
+	self figureGenericMicroBenchmarkRuntimeCharacterisation.
+	self figureGameBenchmarkRuntimeCharacterisation.
+	self figureProgramBenchmarkRuntimeCharacterisation.
 ]
 
 { #category : #generate }
@@ -98,6 +164,19 @@ SCFTikzPictureBenchmarkGenerator >> generate [
 			do: [ :group | 
 				sortedGroup := group sorted: [ :a :b | a basename < b basename ].
 				self generateOneBench: group ]
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> generateCharacterizationFigureFor: list named: name [
+
+	"self new figureRuntimeCharacterisation"
+
+	| files |
+	files := list collect: [ :e |
+		self resultsDirectory children detect: [ :f | f basename endsWith: (e, '-baseline.json') ].
+	].
+
+	self generateRuntimeCharacterisation: files named: name
 ]
 
 { #category : #generate }
@@ -192,6 +271,202 @@ SCFTikzPictureBenchmarkGenerator >> generateOneBench: group [
 		str nextPutAll: self postambleWisk ]
 ]
 
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> generateRuntimeCharacterisation: files [
+
+	(self outputDirectory / 'runtime-characterisation.tex')
+		ensureDelete;
+		writeStreamDo: [ :str | 
+			str nextPutAll: '\begin{figure*}[!h]
+			  \begin{tikzpicture}
+			  \begin{axis}[
+			     title={Test stacked},
+			    xbar stacked,
+			    bar width=10mm,
+			    yticklabels={'.
+			
+			files do: [ :f |
+				str nextPutAll: '{'.
+				str nextPutAll: (((f basename substrings: '>>#') second allButFirst: 'bench' size)
+					copyUpTo: $-) asString.
+				str nextPutAll: '}'] separatedBy: [ str nextPutAll: ','. ].
+			
+			str nextPutAll:'},
+			    ytick=data,
+			   xtick={0,25, 50 ,75,100},
+			  legend style={
+    legend columns=4,
+        at={(xticklabel cs:0.5)},
+        anchor=north,
+        draw=none
+    },
+			   width=.8\textwidth,
+			   bar width=3mm,
+			   xmin=0,
+    xmax=100,
+    area legend,
+    y=8mm,
+    enlarge y limits={abs=0.625},
+			  ]
+			  %Runtime
+			'.
+			str nextPutAll: '\addplot [fill=blue] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalRuntime totalGC |
+				str nextPutAll: '('.
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				totalGC := (ston at: 'full-gc-time') + (ston at: 'incremental-gc-time').
+				str nextPutAll: ((totalRuntime - totalGC - (ston at: 'compilation-time')) / totalRuntime * 100) asFloat asString.
+
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};
+
+			%GC'; cr.
+			str nextPutAll: '\addplot [fill=red] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalGC totalRuntime |
+				str nextPutAll: '('.
+				
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				totalGC := (ston at: 'full-gc-time') + (ston at: 'incremental-gc-time').
+				str nextPutAll: (totalGC / totalRuntime * 100) asFloat asString.
+				
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};
+			%Compilation'; cr.
+			
+			str nextPutAll: '\addplot [fill=green] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalRuntime |
+				str nextPutAll: '('.
+				
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				str nextPutAll: ((ston at: 'compilation-time') / totalRuntime * 100) asFloat asString.
+				
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};'; cr.
+
+			str nextPutAll: '\legend{Runtime,GC,Compilation}
+  \end{axis}
+  \end{tikzpicture}
+	\caption{'.
+	str nextPutAll: 'caption'.
+	str nextPutAll: ' Lower is better.\label{'.
+	str nextPutAll: 'anchor'.
+	str nextPutAll: '}}
+\end{figure*}' ]
+]
+
+{ #category : #generate }
+SCFTikzPictureBenchmarkGenerator >> generateRuntimeCharacterisation: files named: name [
+
+	(self outputDirectory / name)
+		ensureDelete;
+		writeStreamDo: [ :str | 
+			str nextPutAll: '\begin{figure*}[!h]
+			  \begin{tikzpicture}
+			  \begin{axis}[
+			    xbar stacked,
+			    bar width=10mm,
+			    yticklabels={'.
+			
+			files do: [ :f | | maybename |
+				maybename := ((f basename substrings: '>>#') second)
+					copyUpTo: $-.
+				str nextPutAll: '{'.
+				str nextPutAll: (benchNameMapping at: maybename ifAbsent: [ maybename allButFirst: 'bench' size ]) asString.
+				str nextPutAll: '}'] separatedBy: [ str nextPutAll: ','. ].
+			
+			str nextPutAll:'},
+			    ytick=data,
+			   xtick={0,25, 50 ,75,100},
+			  legend style={
+    legend columns=4,
+        at={(xticklabel cs:0.5)},
+        anchor=north,
+        draw=none
+    },
+			   width=.8\textwidth,
+			   bar width=3mm,
+			   xmin=0,
+    xmax=100,
+    area legend,
+    y=8mm,
+    enlarge y limits={abs=0.625},
+			  ]
+			  %Runtime
+			'.
+			str nextPutAll: '\addplot [fill=blue] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalRuntime totalGC |
+				str nextPutAll: '('.
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				totalGC := (ston at: 'full-gc-time') + (ston at: 'incremental-gc-time').
+				str nextPutAll: ((totalRuntime - totalGC - (ston at: 'compilation-time')) / totalRuntime * 100) asFloat asString.
+
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};
+
+			%GC'; cr.
+			str nextPutAll: '\addplot [fill=red] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalGC totalRuntime |
+				str nextPutAll: '('.
+				
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				totalGC := (ston at: 'full-gc-time') + (ston at: 'incremental-gc-time').
+				str nextPutAll: (totalGC / totalRuntime * 100) asFloat asString.
+				
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};
+			%Compilation'; cr.
+			
+			str nextPutAll: '\addplot [fill=green] coordinates {'; cr.
+			files withIndexDo: [ :f :i | | ston totalRuntime |
+				str nextPutAll: '('.
+				
+				ston := STON fromStream: f readStream.
+				totalRuntime := (ston at: 'measurements') sum.
+				str nextPutAll: ((ston at: 'compilation-time') / totalRuntime * 100) asFloat asString.
+				
+				str nextPutAll: ','.
+				str nextPutAll: i asString.
+				str
+					nextPutAll: ')';
+					cr].
+			str nextPutAll: '};'; cr.
+
+			str nextPutAll: '\legend{Runtime,GC,Compilation}
+  \end{axis}
+  \end{tikzpicture}
+	\caption{'.
+	str nextPutAll: 'caption'.
+	str nextPutAll: ' Lower is better.\label{'.
+	str nextPutAll: 'anchor'.
+	str nextPutAll: '}}
+\end{figure*}' ]
+]
+
 { #category : #accessing }
 SCFTikzPictureBenchmarkGenerator >> groupedBenchmarkResultFiles [
 	
@@ -240,7 +515,7 @@ SCFTikzPictureBenchmarkGenerator >> listOfFigures [
 { #category : #accessing }
 SCFTikzPictureBenchmarkGenerator >> outputDirectory [
 
-	^ '/Users/ducasse/Workspace/FirstCircle/Writing/Working/2021-implicit-control-flow-heuristics/figures'
+	^ '/Users/guille/Documents/papers/2021-implicit-control-flow-heuristics/figures'
 		  asFileReference
 ]
 
@@ -310,5 +585,5 @@ SCFTikzPictureBenchmarkGenerator >> preambleWisk: name [
 { #category : #accessing }
 SCFTikzPictureBenchmarkGenerator >> resultsDirectory [
 	
-	^ '/Users/ducasse/Workspace/FirstCircle/Writing/Working/2021-implicit-control-flow-heuristics/benchmarks/results' asFileReference
+	^ '/Users/guille/Documents/papers/2021-implicit-control-flow-heuristics/benchmarks/results' asFileReference
 ]
